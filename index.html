@@ -1144,28 +1144,6 @@ let cvAnalysis = null;
 let cvAnalyzing = false;
 const LOGO = (domain)=>`https://logo.clearbit.com/${domain}`;
 
-function renderJobs(jobs) {
-  apps = jobs;
-  render();
-}
-
-// Sayfa açıldığında doğrudan GitHub'daki güncel jobs.json dosyasını oku
-async function loadJobs() {
-  try {
-    const response = await fetch('jobs.json?t=' + new Date().getTime()); // Önbellek engelleme
-    if (!response.ok) throw new Error("jobs.json bulunamadı");
-    const jobs = await response.json();
-    
-    // İlanları ekrana basan fonksiyonunuz
-    renderJobs(jobs); 
-  } catch (error) {
-    console.error("Veriler yüklenirken hata oluştu:", error);
-  }
-}
-
-// Sayfa yüklendiğinde çalıştır
-document.addEventListener("DOMContentLoaded", loadJobs);
-
 function daysLeftLabel(a){
   if(!a.deadline){
     return a.applicationOpen===false ? "Son tarih bilinmiyor" : "Sürekli/dönemsel açık";
@@ -1771,6 +1749,18 @@ async function runScan() {
     });
 
     const aiData = await aiRes.json();
+
+    // DEBUG: gerçek Gemini yanıtını/hatasını konsola yazdır
+    console.log("Gemini HTTP status:", aiRes.status);
+    console.log("Gemini tam yanıt:", aiData);
+
+    if (aiData.error) {
+      throw new Error(`Gemini API hatası [${aiData.error.code}]: ${aiData.error.message}`);
+    }
+    if (!aiData.candidates || !aiData.candidates[0]) {
+      throw new Error("Gemini yanıtında 'candidates' yok. Muhtemelen içerik filtrelendi. Tam yanıt için konsola bak.");
+    }
+
     const rawText = aiData.candidates[0].content.parts[0].text;
     const cleanJson = JSON.parse(rawText.replace(/```json|```/g, "").trim());
 
@@ -1786,7 +1776,7 @@ async function runScan() {
 
   } catch (err) {
     console.error("Tarama Hatası:", err);
-    alert("Tarama yapılırken bir sorun oluştu. Gemini API Key'ini kontrol etmeyi unutma.");
+    alert("Tarama hatası: " + err.message);
   } finally {
     scanning = false;
     if (scanBtn) scanBtn.disabled = false;
