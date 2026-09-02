@@ -18,6 +18,9 @@ jobs:
           python-version: '3.10'
 
       - name: Taramayı Çalıştır
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scan.py
 
       - name: Değişiklikleri Depoya Kaydet
