@@ -1144,6 +1144,28 @@ let cvAnalysis = null;
 let cvAnalyzing = false;
 const LOGO = (domain)=>`https://logo.clearbit.com/${domain}`;
 
+function renderJobs(jobs) {
+  apps = jobs;
+  render();
+}
+
+// Sayfa açıldığında doğrudan GitHub'daki güncel jobs.json dosyasını oku
+async function loadJobs() {
+  try {
+    const response = await fetch('jobs.json?t=' + new Date().getTime()); // Önbellek engelleme
+    if (!response.ok) throw new Error("jobs.json bulunamadı");
+    const jobs = await response.json();
+    
+    // İlanları ekrana basan fonksiyonunuz
+    renderJobs(jobs); 
+  } catch (error) {
+    console.error("Veriler yüklenirken hata oluştu:", error);
+  }
+}
+
+// Sayfa yüklendiğinde çalıştır
+document.addEventListener("DOMContentLoaded", loadJobs);
+
 function daysLeftLabel(a){
   if(!a.deadline){
     return a.applicationOpen===false ? "Son tarih bilinmiyor" : "Sürekli/dönemsel açık";
