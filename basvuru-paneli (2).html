@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Başvuru Takip Paneli</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#14171F;
+  --surface:#1B2029;
+  --surface-raised:#232936;
+  --hairline:#2B3242;
+  --text:#EDEFF3;
+  --text-dim:#8D95A8;
+  --amber:#F0A94E;
+  --green:#4FBF8B;
+  --red:#EF6461;
+  --blue:#5B8DEF;
+  --purple:#9B8AFB;
+  --amber-bg:rgba(240,169,78,0.14);
+  --green-bg:rgba(79,191,139,0.14);
+  --red-bg:rgba(239,100,97,0.14);
+  --blue-bg:rgba(91,141,239,0.14);
+  --purple-bg:rgba(155,138,251,0.14);
+  --shadow:0 8px 24px rgba(0,0,0,0.28);
+  --card-bg-img:none;
+}
+body[data-theme="light"]{
+  --bg:#F5F6FA;
+  --surface:#FFFFFF;
+  --surface-raised:#F0F2F8;
+  --hairline:#E2E5EF;
+  --text:#1A1E2B;
+  --text-dim:#666F85;
+  --amber:#C97A1E;
+  --green:#1F9467;
+  --red:#D3453F;
+  --blue:#3563DB;
+  --purple:#6B57E8;
+  --amber-bg:rgba(201,122,30,0.10);
+  --green-bg:rgba(31,148,103,0.10);
+  --red-bg:rgba(211,69,63,0.10);
+  --blue-bg:rgba(53,99,219,0.10);
+  --purple-bg:rgba(107,87,232,0.10);
+  --shadow:0 6px 18px rgba(30,40,70,0.08);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  transition:background .2s, color .2s;
+  font-family:'IBM Plex Sans',sans-serif;
+  min-height:100vh;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+.shell{
+  display:grid;
+  grid-template-columns:240px 1fr;
+  min-height:100vh;
+}
+@media (max-width:720px){
+  .shell{grid-template-columns:1fr;}
+  .sidebar{
+    display:flex;
+    flex-direction:row;
+    overflow-x:auto;
+    border-right:none;
+    border-bottom:1px solid var(--hairline);
+  }
+  .sidebar .brand{display:none;}
+  .sidebar .footer-note{display:none;}
+}
+
+.sidebar{
+  border-right:1px solid var(--hairline);
+  padding:28px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.brand{
+  font-size:13px;
+  letter-spacing:0.02em;
+  color:var(--text-dim);
+  margin-bottom:24px;
+  line-height:1.5;
+}
+.brand strong{
+  display:block;
+  font-size:16px;
+  color:var(--text);
+  font-weight:600;
+  margin-bottom:2px;
+}
+
+.tab{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:11px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  color:var(--text-dim);
+  font-size:14px;
+  font-weight:500;
+  border:1px solid transparent;
+  white-space:nowrap;
+  transition:background .15s, color .15s;
+}
+.tab:hover{background:var(--surface);}
+.tab.active{
+  background:var(--surface-raised);
+  color:var(--text);
+  border-color:var(--hairline);
+}
+.tab .count{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  color:var(--text-dim);
+  background:var(--bg);
+  border:1px solid var(--hairline);
+  border-radius:5px;
+  padding:1px 6px;
+  min-width:20px;
+  text-align:center;
+}
+.tab.active .count{color:var(--text);}
+.tab[data-tab="pending"].active{color:var(--amber);border-color:var(--amber);}
+.tab[data-tab="approved"].active{color:var(--green);border-color:var(--green);}
+.tab[data-tab="rejected"].active{color:var(--red);border-color:var(--red);}
+.tab[data-tab="open"].active{color:var(--blue);border-color:var(--blue);}
+
+.footer-note{
+  margin-top:auto;
+  padding-top:20px;
+  border-top:1px solid var(--hairline);
+  font-size:12px;
+  color:var(--text-dim);
+  line-height:1.6;
+}
+.footer-note button{
+  margin-top:10px;
+  width:100%;
+  background:var(--surface-raised);
+  border:1px solid var(--hairline);
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:7px;
+  font-size:12px;
+  font-family:'IBM Plex Sans',sans-serif;
+  cursor:pointer;
+}
+.footer-note button:hover{border-color:var(--text-dim);}
+
+.theme-toggle{
+  display:flex;
+  gap:6px;
+  margin-top:10px;
+  background:var(--bg);
+  border:1px solid var(--hairline);
+  border-radius:8px;
+  padding:3px;
+}
+.theme-toggle button{
+  flex:1;
+  font-size:11px;
+  font-family:'IBM Plex Sans',sans-serif;
+  padding:6px 4px;
+  border-radius:6px;
+  border:none;
+  background:transparent;
+  color:var(--text-dim);
+  cursor:pointer;
+}
+.theme-toggle button.active{
+  background:var(--surface-raised);
+  color:var(--text);
+}
+
+.stats-strip{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:10px;
+  margin-bottom:22px;
+}
+@media (max-width:720px){.stats-strip{grid-template-columns:repeat(2,1fr);}}
+.stat-chip{
+  border-radius:12px;
+  padding:14px 16px;
+  border:1px solid var(--hairline);
+  box-shadow:var(--shadow);
+}
+.stat-chip .num{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:22px;
+  font-weight:600;
+  line-height:1;
+}
+.stat-chip .lbl{
+  font-size:11px;
+  color:var(--text-dim);
+  margin-top:6px;
+}
+.stat-chip.open{background:var(--blue-bg);}
+.stat-chip.open .num{color:var(--blue);}
+.stat-chip.pending{background:var(--amber-bg);}
+.stat-chip.pending .num{color:var(--amber);}
+.stat-chip.approved{background:var(--green-bg);}
+.stat-chip.approved .num{color:var(--green);}
+.stat-chip.rejected{background:var(--red-bg);}
+.stat-chip.rejected .num{color:var(--red);}
+
+.type-donut-row{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:12px;
+  padding:14px 18px;
+  margin-bottom:22px;
+  box-shadow:var(--shadow);
+}
+.donut-legend{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:12px;
+  color:var(--text-dim);
+}
+.donut-legend .dot{
+  display:inline-block;
+  width:9px;height:9px;
+  border-radius:50%;
+  margin-right:6px;
+}
+
+.main{
+  padding:36px 44px;
+  max-width:860px;
+}
+@media (max-width:720px){.main{padding:24px 18px;}}
+
+.main-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:6px;
+  gap:16px;
+  flex-wrap:wrap;
+}
+h1{
+  font-size:22px;
+  font-weight:600;
+  margin:0;
+}
+.updated{
+  font-size:12px;
+  color:var(--text-dim);
+  font-family:'IBM Plex Mono',monospace;
+  white-space:nowrap;
+  padding-top:4px;
+}
+.subline{
+  color:var(--text-dim);
+  font-size:14px;
+  margin:6px 0 28px;
+}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:12px;
+  padding:18px 20px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
+  transition:transform .12s, box-shadow .12s;
+}
+.card:hover{transform:translateY(-1px);}
+.card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+.company{
+  font-size:15px;
+  font-weight:600;
+  margin:0 0 2px;
+}
+.position{
+  font-size:13px;
+  color:var(--text-dim);
+  margin:0;
+}
+.badge{
+  font-size:11px;
+  font-weight:500;
+  padding:3px 9px;
+  border-radius:20px;
+  white-space:nowrap;
+  font-family:'IBM Plex Mono',monospace;
+}
+.badge.pending{color:var(--amber);background:var(--amber-bg);}
+.badge.approved{color:var(--green);background:var(--green-bg);}
+.badge.rejected{color:var(--red);background:var(--red-bg);}
+.badge.open{color:var(--blue);background:var(--blue-bg);}
+
+.meta-row{
+  display:flex;
+  gap:18px;
+  margin-top:12px;
+  font-size:12px;
+  color:var(--text-dim);
+  font-family:'IBM Plex Mono',monospace;
+  flex-wrap:wrap;
+}
+.note{
+  margin-top:10px;
+  font-size:13px;
+  color:var(--text);
+  line-height:1.5;
+  border-left:2px solid var(--hairline);
+  padding-left:10px;
+}
+.actions{
+  margin-top:14px;
+  display:flex;
+  gap:8px;
+}
+.actions button{
+  font-size:12px;
+  font-family:'IBM Plex Sans',sans-serif;
+  padding:6px 11px;
+  border-radius:6px;
+  border:1px solid var(--hairline);
+  background:transparent;
+  color:var(--text-dim);
+  cursor:pointer;
+}
+.actions button:hover{color:var(--text);border-color:var(--text-dim);}
+.actions button.danger:hover{color:var(--red);border-color:var(--red);}
+.actions button.success:hover{color:var(--green);border-color:var(--green);}
+
+.filters{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:22px;
+  flex-wrap:wrap;
+}
+.filter-group{
+  display:flex;
+  gap:4px;
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:8px;
+  padding:3px;
+}
+.filter-btn{
+  font-size:12px;
+  font-family:'IBM Plex Sans',sans-serif;
+  padding:6px 12px;
+  border-radius:6px;
+  border:none;
+  background:transparent;
+  color:var(--text-dim);
+  cursor:pointer;
+}
+.filter-btn.active{
+  background:var(--surface-raised);
+  color:var(--text);
+}
+select#company-filter{
+  font-size:12px;
+  font-family:'IBM Plex Sans',sans-serif;
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.type-tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  color:var(--text-dim);
+  border:1px solid var(--hairline);
+  border-radius:4px;
+  padding:1px 6px;
+  margin-left:6px;
+}
+.window-tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  border-radius:4px;
+  padding:1px 6px;
+  margin-left:6px;
+}
+.window-tag.open{color:var(--green);border:1px solid var(--green);}
+.window-tag.closed{color:var(--text-dim);border:1px solid var(--hairline);}
+.deadline-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:11px;
+  font-family:'IBM Plex Mono',monospace;
+  padding:4px 10px;
+  border-radius:20px;
+  font-weight:500;
+}
+.deadline-chip::before{
+  content:"";
+  width:6px;height:6px;
+  border-radius:50%;
+  display:inline-block;
+}
+.deadline-chip.urgent{color:var(--red);background:var(--red-bg);}
+.deadline-chip.urgent::before{background:var(--red);}
+.deadline-chip.warn{color:var(--amber);background:var(--amber-bg);}
+.deadline-chip.warn::before{background:var(--amber);}
+.deadline-chip.open{color:var(--green);background:var(--green-bg);}
+.deadline-chip.open::before{background:var(--green);}
+.deadline-chip.rolling{color:var(--blue);background:var(--blue-bg);}
+.deadline-chip.rolling::before{background:var(--blue);}
+.deadline-chip.closed{color:var(--text-dim);background:var(--surface-raised);}
+.deadline-chip.closed::before{background:var(--text-dim);}
+.country-tag{
+  font-size:11px;
+  color:var(--text-dim);
+  font-family:'IBM Plex Mono',monospace;
+}
+.links-row{
+  margin-top:12px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.link-pill{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  color:var(--text);
+  text-decoration:none;
+  background:var(--surface-raised);
+  border:1px solid var(--hairline);
+  border-radius:20px;
+  padding:4px 12px 4px 6px;
+}
+.link-pill:hover{border-color:var(--text-dim);}
+.link-pill img{
+  width:16px;
+  height:16px;
+  border-radius:4px;
+  object-fit:cover;
+  background:#fff;
+}
+
+.logo-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(110px, 1fr));
+  gap:14px;
+}
+.logo-card{
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:10px;
+  padding:16px 10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  text-align:center;
+}
+.logo-card img{
+  width:40px;height:40px;
+  border-radius:8px;
+  object-fit:contain;
+  background:#fff;
+  border:1px solid var(--hairline);
+}
+.logo-card span{
+  font-size:11px;
+  color:var(--text-dim);
+  line-height:1.3;
+}
+
+.cv-box{
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:10px;
+  padding:18px;
+}
+.cv-box textarea{
+  width:100%;
+  min-height:220px;
+  background:var(--bg);
+  border:1px solid var(--hairline);
+  border-radius:8px;
+  color:var(--text);
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:13px;
+  padding:12px;
+  resize:vertical;
+}
+.cv-box button{
+  margin-top:12px;
+  background:var(--surface-raised);
+  border:1px solid var(--hairline);
+  color:var(--text);
+  padding:10px 18px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+}
+.cv-box button:hover{border-color:var(--text-dim);}
+.cv-box button:disabled{opacity:0.5;cursor:default;}
+.match-card{
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:10px;
+  padding:16px 18px;
+  margin-bottom:12px;
+}
+.match-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.match-score{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  font-weight:600;
+  color:var(--green);
+  white-space:nowrap;
+}
+
+.admin-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:10px;
+  padding:12px 16px;
+  margin-bottom:8px;
+  gap:12px;
+}
+.admin-row .info{display:flex;align-items:center;gap:10px;min-width:0;}
+.admin-row .info img{width:26px;height:26px;border-radius:6px;object-fit:contain;background:#fff;border:1px solid var(--hairline);flex-shrink:0;}
+.admin-row .txt{min-width:0;}
+.admin-row .txt .c{font-size:13px;font-weight:600;}
+.admin-row .txt .p{font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-row .del-btn{
+  font-size:12px;
+  color:var(--red);
+  background:var(--red-bg);
+  border:1px solid transparent;
+  border-radius:7px;
+  padding:6px 12px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.admin-row .del-btn:hover{border-color:var(--red);}
+.add-form{
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:20px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+@media (max-width:720px){.add-form{grid-template-columns:1fr;}}
+.add-form .full{grid-column:1/-1;}
+.add-form label{
+  font-size:11px;
+  color:var(--text-dim);
+  display:block;
+  margin-bottom:4px;
+}
+.add-form input, .add-form select, .add-form textarea{
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--hairline);
+  border-radius:7px;
+  color:var(--text);
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:13px;
+  padding:8px 10px;
+}
+.add-form textarea{min-height:60px;resize:vertical;}
+.add-form .checks{display:flex;gap:14px;font-size:12px;color:var(--text);align-items:center;}
+.add-form .checks label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text);margin:0;}
+.add-toggle-btn{
+  background:var(--surface-raised);
+  border:1px solid var(--hairline);
+  color:var(--text);
+  padding:9px 16px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+  margin-bottom:16px;
+}
+.add-toggle-btn:hover{border-color:var(--text-dim);}
+.section-label{
+  font-size:12px;
+  color:var(--text-dim);
+  margin:24px 0 10px;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+}
+
+.scan-result-card{
+  background:var(--surface);
+  border:1px solid var(--blue);
+  border-radius:10px;
+  padding:14px 16px;
+  margin-top:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.scan-result-card .txt{min-width:0;}
+.scan-result-card .txt .c{font-size:13px;font-weight:600;}
+.scan-result-card .txt .p{font-size:12px;color:var(--text-dim);}
+.scan-result-card .txt .src{font-size:11px;color:var(--blue);margin-top:2px;}
+.scan-result-card .btns{display:flex;gap:8px;flex-shrink:0;}
+.scan-result-card .btns button{
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:7px;
+  border:1px solid var(--hairline);
+  background:var(--surface-raised);
+  color:var(--text);
+  cursor:pointer;
+}
+.scan-result-card .btns button.add-scan-btn{color:var(--green);border-color:var(--green);}
+
+.empty{
+  color:var(--text-dim);
+  font-size:14px;
+  padding:40px 0;
+  text-align:center;
+  border:1px dashed var(--hairline);
+  border-radius:10px;
+}
+
+.banner{
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:10px;
+  padding:14px 16px;
+  font-size:13px;
+  color:var(--text-dim);
+  margin-bottom:24px;
+  line-height:1.6;
+}
+.banner strong{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="brand"><strong>Başvuru Paneli</strong>tahasarikaya05@gmail.com</div>
+    <div class="tab" data-tab="open"><span>Başvuruya Açık</span><span class="count" id="count-open">0</span></div>
+    <div class="tab" data-tab="pending"><span>Başvurular</span><span class="count" id="count-pending">0</span></div>
+    <div class="tab" data-tab="approved"><span>Onaylananlar</span><span class="count" id="count-approved">0</span></div>
+    <div class="tab" data-tab="rejected"><span>Reddedilenler</span><span class="count" id="count-rejected">0</span></div>
+    <div class="tab" data-tab="companies"><span>Şirketler</span></div>
+    <div class="tab" data-tab="cv"><span>CV Analizi</span></div>
+    <div class="footer-note">
+      Durumlar Gmail üzerinden okunan yanıtlara göre belirlendi. SMS bildirimi için Inkbox bağlantısı gerekir — henüz bağlı değil.
+      <div class="theme-toggle" id="theme-toggle">
+        <button data-theme="dark">Koyu</button>
+        <button data-theme="light">Açık</button>
+      </div>
+      <button id="reset-btn">Verileri sıfırla</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-header">
+      <h1 id="page-title">Başvurular</h1>
+      <div class="updated" id="updated-label"></div>
+    </div>
+    <div class="subline" id="page-sub"></div>
+
+    <div id="stats-strip"></div>
+
+    <div id="scan-section" style="display:none;">
+      <div class="banner" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div>
+          <strong>Yeni İlan Taraması:</strong> Tavily Search ve Gemini AI ile gerçek zamanlı web araması yapıp panelde takip edilen şirketler için yeni açılmış ilan var mı diye taratabilirsin.
+          <div id="scan-status" style="margin-top:4px;font-size:11px;"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          <label style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:5px;">
+            <input type="checkbox" id="auto-scan-toggle"> Sekme açıkken 30 dk'da bir otomatik tara
+          </label>
+          <button id="scan-now-btn" class="add-toggle-btn" style="margin:0;white-space:nowrap;">Şimdi Tara</button>
+        </div>
+      </div>
+      <div id="scan-results"></div>
+    </div>
+
+    <div id="defense-links" class="banner" style="display:none;">
+      <strong>Savunma Sanayii Hızlı Erişim:</strong> Savunma Kariyer'i otomatik tarayamıyorum (bot erişimini engelliyor ve ilanları JS ile yüklüyor) — ama buradan tek tıkla kontrol edebilirsin:
+      <div class="links-row" style="margin-top:10px;">
+        <a class="link-pill" href="https://savunmakariyer.com/ilanlar" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/savunmakariyer.com" onerror="this.style.display='none'">Savunma Kariyer</a>
+        <a class="link-pill" href="https://envantermedya.com/staj/aselsan/" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/aselsan.com.tr" onerror="this.style.display='none'">ASELSAN</a>
+        <a class="link-pill" href="https://envantermedya.com/staj/tusas/" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/tusas.com" onerror="this.style.display='none'">TUSAŞ</a>
+        <a class="link-pill" href="https://envantermedya.com/staj/roketsan/" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/roketsan.com.tr" onerror="this.style.display='none'">ROKETSAN</a>
+        <a class="link-pill" href="https://envantermedya.com/staj/havelsan/" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/havelsan.com.tr" onerror="this.style.display='none'">HAVELSAN</a>
+        <a class="link-pill" href="https://envantermedya.com/staj/stm/" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/stm.com.tr" onerror="this.style.display='none'">STM</a>
+        <a class="link-pill" href="https://envantermedya.com/staj/mke/" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/mke.gov.tr" onerror="this.style.display='none'">MKE</a>
+      </div>
+    </div>
+
+    <div class="banner" id="sms-banner">
+      <strong>Bildirim durumu:</strong> SMS bildirimleri şu an kapalı çünkü Inkbox bağlanmadı. Bağladığında, bir başvurunun durumu değiştiğinde otomatik SMS göndermeye başlayabilirim.
+    </div>
+
+    <div class="filters">
+      <div class="filter-group" id="type-filter">
+        <button class="filter-btn active" data-type="all">Tümü</button>
+        <button class="filter-btn" data-type="staj">Staj</button>
+        <button class="filter-btn" data-type="is">İş</button>
+      </div>
+      <div class="filter-group" id="country-filter">
+        <button class="filter-btn active" data-country="all">Tümü</button>
+        <button class="filter-btn" data-country="TR">Türkiye</button>
+        <button class="filter-btn" data-country="Yurt Dışı">Yurt Dışı</button>
+      </div>
+      <select id="company-filter">
+        <option value="all">Tüm şirketler</option>
+      </select>
+      <button class="filter-btn" id="show-closed-toggle" style="border:1px solid var(--hairline);border-radius:8px;">Kapananları da göster</button>
+    </div>
+
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_DATA = [
+  {
+    id: "baykar-yazilim",
+    company: "Baykar",
+    position: "Nesne Tabanlı Yazılım Mühendisi",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["is"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "baykartech.com",
+    links: [{label:"Baykar Kariyer", url:"https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/nesne-tabanli-yazilim-muhendisi", domain:"baykartech.com"}],
+    note: "Baykar'ın güncel açık pozisyonlarından (kariyer.baykartech.com), 'Aday Mühendislik/Stajyer' değil doğrudan mühendis pozisyonu."
+  },
+  {
+    id: "baykar-devops",
+    company: "Baykar",
+    position: "DevOps / Sistem Güvenilirliği Mühendisi (SRE)",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["is"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "baykartech.com",
+    links: [{label:"Baykar Kariyer", url:"https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/devops-sistem-guvenilirligi-muhendisi-sre", domain:"baykartech.com"}],
+    note: "Baykar kariyer sayfasındaki açık pozisyonlardan. Deneyim gerektiren tam zamanlı bir mühendislik rolü."
+  },
+  {
+    id: "baykar-agirlik-denge",
+    company: "Baykar",
+    position: "Ağırlık ve Denge Mühendisi",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["is"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "baykartech.com",
+    links: [{label:"Baykar Kariyer", url:"https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/agirlik-ve-denge-muhendisi", domain:"baykartech.com"}],
+    note: "Baykar kariyer sayfasındaki açık pozisyonlardan. Not: 2026 Güz Dönemi staj başvuruları kapandı, değerlendirme sürüyor — bu yüzden panelde sadece 'İş' pozisyonu olarak listelendi."
+  },
+  {
+    id: "siemens-working-student",
+    company: "Siemens Türkiye",
+    position: "Working Student Program",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj","is"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "siemens.com",
+    links: [
+      {label:"Siemens TR Kariyer", url:"https://www.siemens.com/tr/tr/sirket/is-kariyer/staj-olanaklari.html", domain:"siemens.com"},
+      {label:"Kariyer.net", url:"https://www.kariyer.net/firma-profil/siemens-1017-183", domain:"kariyer.net"}
+    ],
+    note: "Yaz stajı başvuruları her yıl Şubat ayında açılıyor (şu an kapalı) ama Working Student programı yıl boyu devam ediyor — hem yarı zamanlı çalışan hem stajyer niteliği taşıdığı için iki kategoride de listelendi."
+  },
+  {
+    id: "mercedes-benz-turk-staj",
+    company: "Mercedes-Benz Türk",
+    position: "PEP / Summer Stars Staj Programları",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: false,
+    logoDomain: "mercedes-benz.com.tr",
+    links: [
+      {label:"Kariyer.net ilanı", url:"https://www.kariyer.net/is-ilani/mercedes-benz-turk-a-s-pep-uzun-donem-staj-programi-4356304", domain:"kariyer.net"}
+    ],
+    note: "Başvuru dönemi Ocak-Mart 2026'da kapandı; bu yüzden 'Sezonu Kapalı' işaretledim. Bir sonraki dönem açıldığında burada güncellerim, şimdiden takibe almak istersen ekledim."
+  },
+  {
+    id: "ford-otosan-staj",
+    company: "Ford Otosan",
+    position: "Gelecek Tasarımcıları Yaz Staj Programı",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: false,
+    logoDomain: "fordotosan.com.tr",
+    links: [{label:"Başvuru sayfası", url:"https://fordotosan.onenewone.com/", domain:"fordotosan.com.tr"}],
+    note: "Son başvuru tarihi 13.02.2026'ydı, şu an kapalı. Genelde her yıl şubat ayında yeniden açılıyor."
+  },
+  {
+    id: "toyota-turkiye-staj",
+    company: "Toyota Türkiye",
+    position: "Gelecek Toyota'da / Deneyim Toyota Staj Programları",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: false,
+    logoDomain: "toyota.com.tr",
+    links: [{label:"Toyota'da Kariyer", url:"https://www.toyota.com.tr/toyotada-kariyer", domain:"toyota.com.tr"}],
+    note: "Toyota Türkiye staj başvuruları her yıl Nisan ayında açılıyor, şu an kapalı."
+  },
+  {
+    id: "bosch-turkiye-smart-start",
+    company: "Bosch Türkiye",
+    position: "Smart Start - Uzun Dönem Staj",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "bosch.com.tr",
+    links: [{label:"Bosch TR Kariyer", url:"https://www.bosch.com.tr/kariyer/", domain:"bosch.com.tr"}],
+    note: "Bosch'un uzun dönemli staj programı (Smart Start) belirli bir başvuru penceresi olmadan yıl boyu ilerliyor gibi görünüyor — kesin tarih bulamadım, kariyer sayfasından kontrol etmen iyi olur."
+  },
+  {
+    id: "bmw-group-careers",
+    company: "BMW Group",
+    position: "Genel Kariyer / Staj Fırsatları (Global)",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj","is"],
+    country: "Yurt Dışı",
+    countryLabel: "Almanya (merkez)",
+    applicationOpen: true,
+    logoDomain: "bmwgroup.com",
+    links: [{label:"BMW Group Careers", url:"https://www.bmwgroup.jobs/", domain:"bmwgroup.com"}],
+    note: "BMW'nin Türkiye'de üretim/mühendislik odaklı bir staj programına rastlamadım (Türkiye ofisi ağırlıklı satış/pazarlama) — bu yüzden global kariyer sayfasını ekledim, Almanya merkezli mühendislik pozisyonları için."
+  },
+  {
+    id: "nato-internship",
+    company: "NATO",
+    position: "NATO Internship Programme (Brüksel Karargahı)",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj"],
+    country: "Yurt Dışı",
+    countryLabel: "Belçika",
+    applicationOpen: true,
+    deadline: null,
+    logoDomain: "nato.int",
+    links: [
+      {label:"NATO Kariyer", url:"https://www.nato.int/en/work-with-us/careers/internship-programme", domain:"nato.int"},
+      {label:"Başvuru Portalı", url:"https://nato.taleo.net/careersection/5/joblist.ftl", domain:"nato.int"}
+    ],
+    note: "6 aylık, aylık 1.335 Euro burslu bir program. Dönemler Mart/Eylül olarak açılıyor, son başvuru tarihleri döneme göre değişiyor (bir önceki dönem için 30 Nisan 2026'ydı) — kesin güncel tarihi bulamadım, portaldan kontrol etmen gerekiyor."
+  },
+  {
+    id: "tubitak-ulusal-staj",
+    company: "TÜBİTAK",
+    position: "Ulusal Staj Programı (İŞKUR üzerinden)",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: false,
+    deadline: "2026-03-16",
+    logoDomain: "tubitak.gov.tr",
+    links: [{label:"Ulusal Staj Programı", url:"https://ulusalstajprogrami.iskur.gov.tr", domain:"tubitak.gov.tr"}],
+    note: "2026 döneminin son başvuru tarihi 16 Mart 2026'ydı, kapandı. Genelde yılda bir kez açılıyor. Ayrıca TÜBİTAK'ın 2247-C STAR bursu gibi 'burs' ağırlıklı programları var — onları senin isteğin üzerine ileride açacağımız Burslar sekmesine koyacağım."
+  },
+  {
+    id: "enerjisa",
+    company: "Enerjisa",
+    position: "Staj ve Genç Yetenek Programları (ENTER)",
+    appliedDate: "2026-09-01",
+    lastUpdate: "2026-09-01",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: false,
+    deadline: null,
+    logoDomain: "enerjisa.com.tr",
+    links: [{label:"Enerjisa Kariyer", url:"https://www.enerjisa.com.tr/tr/enerjisa-hakkinda/kariyer/enerjisada-kariyer", domain:"enerjisa.com.tr"}],
+    note: "Kariyer.net profilinde şu an aktif yayınlanmış bir pozisyon görünmüyor. Enerjisa Dağıtım'ın ENTER programı ve yaz stajı ilanları dönemsel açılıyor, açıldığında burayı güncellerim."
+  },
+  {
+    id: "vodafone-kampus",
+    company: "Vodafone",
+    position: "FreeZone Kampüs Marka Yöneticisi",
+    appliedDate: "2026-08-05",
+    lastUpdate: "2026-08-05",
+    status: "open",
+    type: ["is"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "vodafone.com.tr",
+    links: [],
+    deadline: "2026-08-10",
+    note: "Vodafone, daha önceki kampüs elçiliği yazışman üzerine bu pozisyonu doğrudan sana önerdi. Son başvuru tarihi 10 Ağustos olarak belirtilmişti — hâlâ geçerliyse hızlı davranmakta fayda var. Başvuru linki mailindeydi, buraya eklemedim."
+  },
+  {
+    id: "cci-next-talent",
+    company: "Coca-Cola İçecek (CCI)",
+    position: "Next Talent Staj ve MT Programı (9 farklı şehir)",
+    appliedDate: "2026-08-29",
+    lastUpdate: "2026-08-29",
+    status: "open",
+    type: ["staj","is"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "cci.com.tr",
+    links: [],
+    deadline: "2026-08-30",
+    note: "İçerikte hem staj hem Management Trainee (MT) programı birlikte geçiyor, bu yüzden iki kategoride de listelendi. TalentCoders üzerinden gelen duyuruda 'son 1 gün' uyarısı vardı, süresi dolmuş olabilir."
+  },
+  {
+    id: "talentcoders-dijital-pazarlama",
+    company: "Öğrenci Kariyeri (TalentCoders)",
+    position: "Dijital Pazarlama Stajyeri (tüm bölümlere açık)",
+    appliedDate: "2026-08-31",
+    lastUpdate: "2026-08-31",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "talentcoders.co",
+    links: [],
+    note: "Tüm bölümlere açık staj ilanı olarak duyuruldu, henüz başvuru yapılmadı."
+  },
+  {
+    id: "ntt-mercedes-techcamp",
+    company: "NTT Data (Mercedes projesi)",
+    position: "Tech Camp üzerinden mülakat garantili 20 kontenjan",
+    appliedDate: "2026-08-21",
+    lastUpdate: "2026-08-21",
+    status: "open",
+    type: ["staj"],
+    country: "TR",
+    applicationOpen: true,
+    logoDomain: "nttdata.com",
+    links: [],
+    note: "İçerikte doğrudan 'staj' ya da 'iş' geçmiyordu; katılımcı profili (üniversite öğrencileri) ve bootcamp bağlamına bakarak staj kategorisine aldım."
+  },
+  {
+    id: "linkedin-siemens-electrical",
+    company: "Siemens",
+    position: "Electrical Engineer – Elektroplanung (w/m/d)",
+    appliedDate: "2026-08-28",
+    lastUpdate: "2026-08-28",
+    status: "open",
+    type: ["is"],
+    country: "Yurt Dışı",
+    countryLabel: "Almanya",
+    applicationOpen: true,
+    logoDomain: "siemens.com",
+    links: [],
+    note: "LinkedIn iş uyarısı üzerinden geldi. Pozisyon başlığındaki '(w/m/d)' Almanya'daki ilanlarda kullanılan bir işaret, o yüzden Yurt Dışı olarak etiketledim. Henüz başvurulmadı."
+  },
+  {
+    id: "linkedin-aws-swe-intern",
+    company: "Amazon Web Services (AWS)",
+    position: "Software Dev Engineer Internship – Embedded Development",
+    appliedDate: "2026-08-15",
+    lastUpdate: "2026-08-15",
+    status: "open",
+    type: ["staj"],
+    country: "Yurt Dışı",
+    applicationOpen: true,
+    logoDomain: "aboutamazon.com",
+    links: [],
+    note: "LinkedIn üzerinden gelen staj ilanı, kaydedilmiş ama başvuru yapılmamış görünüyor. Lokasyon net değildi, Yurt Dışı olarak işaretledim."
+  },
+  {
+    id: "linkedin-siemens-parttime",
+    company: "Siemens",
+    position: "Part-Time Working Student (Digitalization & Automation Engineer)",
+    appliedDate: "2026-08-31",
+    lastUpdate: "2026-08-31",
+    status: "open",
+    type: ["staj","is"],
+    country: "Yurt Dışı",
+    countryLabel: "Almanya",
+    applicationOpen: true,
+    logoDomain: "siemens.com",
+    links: [],
+    note: "'Working Student' modeli hem stajyer hem yarı zamanlı çalışan niteliği taşıdığı için iki kategoride de listelendi."
+  },
+  {
+    id: "roketsan",
+    company: "Roketsan",
+    position: "R-FORCE CORE & R-FORCE PROD Aday Mühendislik Programı",
+    appliedDate: "2026-07-24",
+    lastUpdate: "2026-07-27",
+    status: "pending",
+    type: ["is"],
+    country: "TR",
+    logoDomain: "roketsan.com.tr",
+    links: [],
+    note: "Başvuru maili ilk gönderimde teslim edilemedi (adres hatası), 27 Temmuz'da info@roketsan.com.tr adresine tekrar gönderildi. Henüz yanıt yok."
+  },
+  {
+    id: "tei",
+    company: "TEI (TUSAŞ Motor Sanayii)",
+    position: "Kariyerini Uçur Yaz Staj Programı",
+    appliedDate: "2026-04-14",
+    lastUpdate: "2026-04-29",
+    status: "pending",
+    type: ["staj"],
+    country: "TR",
+    logoDomain: "tei.com.tr",
+    links: [],
+    note: "1 aydır sonuç bekleniyor diye durum sorusu gönderildi. TEI, sürecin devam ettiğini belirtti, kesin sonuç iletilmedi."
+  },
+  {
+    id: "siemens-energy",
+    company: "Siemens Energy Türkiye",
+    position: "Internship Program",
+    appliedDate: "2026-04-04",
+    lastUpdate: "2026-05-19",
+    status: "pending",
+    type: ["staj"],
+    country: "TR",
+    logoDomain: "siemens-energy.com",
+    links: [],
+    note: "29 Nisan'daki durum sorgusunda başvuru 'in hiring' (değerlendirmede) olarak görünüyordu. 19 Mayıs'ta ikinci kez takip maili gönderildi, henüz yanıt gelmedi."
+  },
+  {
+    id: "eth-erasmus",
+    company: "ETH Zürich",
+    position: "Erasmus+ Staj (Signal Processing / Elektrik-Elektronik)",
+    appliedDate: "2026-03-30",
+    lastUpdate: "2026-03-30",
+    status: "rejected",
+    type: ["staj"],
+    country: "Yurt Dışı",
+    countryLabel: "İsviçre",
+    logoDomain: "ethz.ch",
+    links: [],
+    note: "ETH, Erasmus kapsamında staj imkanı sunmadıklarını belirtti; bunun yerine 'project mobility student' olarak başvurmayı önerdiler."
+  },
+  {
+    id: "chalmers-erasmus",
+    company: "Chalmers University of Technology",
+    position: "Erasmus+ Staj (Sinyal İşleme, Prof. Tomas McKelvey)",
+    appliedDate: "2026-03-31",
+    lastUpdate: "2026-04-15",
+    status: "pending",
+    type: ["staj"],
+    country: "Yurt Dışı",
+    countryLabel: "İsveç",
+    logoDomain: "chalmers.se",
+    links: [],
+    note: "CV, başlangıç tarihi ve süre bilgisi paylaşıldı, davet mektubu için hoca ile yazışma devam ediyor. Kesin onay bekleniyor."
+  },
+  {
+    id: "aalto-erasmus",
+    company: "Aalto University",
+    position: "Erasmus+ Staj (Elektrik Mühendisliği)",
+    appliedDate: "2026-03-30",
+    lastUpdate: "2026-03-31",
+    status: "pending",
+    type: ["staj"],
+    country: "Yurt Dışı",
+    countryLabel: "Finlandiya",
+    logoDomain: "aalto.fi",
+    links: [],
+    note: "İlgili bölüme yönlendirildi, School of Electrical Engineering'den yanıt geldi ancak süreç henüz sonuçlanmadı."
+  },
+  {
+    id: "dtu-erasmus",
+    company: "Technical University of Denmark (DTU)",
+    position: "Erasmus+ Staj",
+    appliedDate: "2026-03-30",
+    lastUpdate: "2026-04-01",
+    status: "pending",
+    type: ["staj"],
+    country: "Yurt Dışı",
+    countryLabel: "Danimarka",
+    logoDomain: "dtu.dk",
+    links: [],
+    note: "DTU, öğrencinin doğrudan bir danışman ile iletişime geçmesi gerektiğini bildirdi. Henüz bir danışman onayı yok."
+  }
+];
+
+const STORAGE_KEY = "applications-v5";
+let apps = [];
+let activeTab = "open";
+let typeFilter = "all";
+let countryFilter = "all";
+let companyFilter = "all";
+let showClosed = false;
+let cvAnalysis = null;
+let cvAnalyzing = false;
+const LOGO = (domain)=>`https://logo.clearbit.com/${domain}`;
+
+function daysLeftLabel(a){
+  if(!a.deadline){
+    return a.applicationOpen===false ? "Son tarih bilinmiyor" : "Sürekli/dönemsel açık";
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dl = new Date(a.deadline+"T00:00:00");
+  const diff = Math.round((dl-today)/86400000);
+  if(diff < 0) return `Süresi doldu (${Math.abs(diff)} gün önce)`;
+  if(diff === 0) return "Bugün son gün!";
+  return `Bitimine ${diff} gün`;
+}
+
+function deadlineChip(a){
+  let variant = 'open', label;
+  if(a.deadline){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dl = new Date(a.deadline+"T00:00:00");
+    const diff = Math.round((dl-today)/86400000);
+    if(diff < 0){ variant='closed'; label = `Süresi doldu · ${Math.abs(diff)} gün önce`; }
+    else if(diff===0){ variant='urgent'; label = 'Bugün son gün!'; }
+    else if(diff<=5){ variant='urgent'; label = `Bitimine ${diff} gün`; }
+    else if(diff<=14){ variant='warn'; label = `Bitimine ${diff} gün`; }
+    else { variant='open'; label = `Bitimine ${diff} gün`; }
+  } else if(a.applicationOpen===false){
+    variant='closed'; label='Sezonu kapalı';
+  } else {
+    variant='rolling'; label='Sürekli / rotasyonlu açık';
+  }
+  return `<span class="deadline-chip ${variant}">${label}</span>`;
+}
+
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    apps = res && res.value ? JSON.parse(res.value) : DEFAULT_DATA;
+  }catch(e){
+    apps = DEFAULT_DATA;
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(DEFAULT_DATA), false); }catch(e2){}
+  }
+  render();
+}
+
+async function saveData(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(apps), false); }catch(e){}
+}
+
+function fmtDate(d){
+  const dt = new Date(d+"T00:00:00");
+  return dt.toLocaleDateString('tr-TR', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+const TITLES = {
+  open: ["Başvuruya Açık", "Maillerinde gördüğüm, henüz başvurmadığın ilan ve fırsatlar."],
+  pending: ["Başvurular", "Yanıt bekleyen veya süreci devam eden başvurular."],
+  approved: ["Onaylananlar", "Olumlu yanıt alınan başvurular."],
+  rejected: ["Reddedilenler", "Olumsuz yanıt alınan veya kapanan başvurular."],
+  companies: ["Şirketler", "Panelde takip edilen tüm şirketler — buradan bana hangilerini çıkarmak istediğini söyleyebilirsin."],
+  cv: ["CV Analizi", "CV'ni yapıştır, açık pozisyonlardan sana en uygun olanları öne çıkarayım."]
+};
+const BADGE_LABEL = {open:"Açık", pending:"Beklemede", approved:"Onaylandı", rejected:"Reddedildi"};
+
+function populateCompanyFilter(){
+  const select = document.getElementById('company-filter');
+  const current = select.value || "all";
+  const companies = [...new Set(apps.map(a=>a.company))].sort((a,b)=>a.localeCompare(b,'tr'));
+  select.innerHTML = '<option value="all">Tüm şirketler</option>' +
+    companies.map(c=>`<option value="${c}">${c}</option>`).join('');
+  select.value = companies.includes(current) ? current : "all";
+}
+
+function render(){
+  document.getElementById('count-open').textContent = apps.filter(a=>a.status==='open').length;
+  document.getElementById('count-pending').textContent = apps.filter(a=>a.status==='pending').length;
+  document.getElementById('count-approved').textContent = apps.filter(a=>a.status==='approved').length;
+  document.getElementById('count-rejected').textContent = apps.filter(a=>a.status==='rejected').length;
+
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===activeTab));
+  document.getElementById('page-title').textContent = TITLES[activeTab][0];
+  document.getElementById('page-sub').textContent = TITLES[activeTab][1];
+  document.getElementById('updated-label').textContent = "güncel: " + fmtDate(new Date().toISOString().slice(0,10));
+
+  const isSpecialTab = activeTab==='companies' || activeTab==='cv';
+  document.querySelector('.filters').style.display = isSpecialTab ? 'none' : 'flex';
+  document.getElementById('sms-banner').style.display = isSpecialTab ? 'none' : 'block';
+  document.getElementById('stats-strip').style.display = isSpecialTab ? 'none' : 'block';
+  document.getElementById('defense-links').style.display = activeTab==='open' ? 'block' : 'none';
+  document.getElementById('scan-section').style.display = activeTab==='open' ? 'block' : 'none';
+  if(activeTab==='open') renderScanUI();
+  if(!isSpecialTab) renderStats();
+
+  if(activeTab==='companies'){ renderCompanies(); return; }
+  if(activeTab==='cv'){ renderCv(); return; }
+
+  populateCompanyFilter();
+  const closedToggle = document.getElementById('show-closed-toggle');
+  closedToggle.style.display = activeTab==='open' ? 'block' : 'none';
+  closedToggle.classList.toggle('active', showClosed);
+
+  const list = document.getElementById('list');
+  let items = apps.filter(a=>a.status===activeTab);
+  if(activeTab==='open' && !showClosed) items = items.filter(a=>a.applicationOpen!==false);
+  if(typeFilter!=='all') items = items.filter(a=>(a.type||[]).includes(typeFilter));
+  if(countryFilter!=='all') items = items.filter(a=>a.country===countryFilter);
+  if(companyFilter!=='all') items = items.filter(a=>a.company===companyFilter);
+  // Türkiye öncelikli sıralama when viewing all countries
+  if(countryFilter==='all'){
+    items = [...items].sort((a,b)=> (a.country==='TR'?0:1) - (b.country==='TR'?0:1));
+  }
+
+  if(items.length===0){
+    list.innerHTML = '<div class="empty">Bu filtrelerde başvuru yok.</div>';
+    return;
+  }
+  const typeLabel = {staj:"Staj", is:"İş"};
+  list.innerHTML = items.map(a=>`
+    <div class="card">
+      <div class="card-top">
+        <div style="display:flex;gap:10px;">
+          <img src="${LOGO(a.logoDomain||'')}" onerror="this.style.display='none'" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#fff;border:1px solid var(--hairline);flex-shrink:0;">
+          <div>
+            <p class="company">${a.company} <span class="country-tag">· ${a.countryLabel || (a.country==='TR' ? 'Türkiye' : 'Yurt Dışı')}</span></p>
+            <p class="position">${a.position}${(a.type||[]).map(t=>`<span class="type-tag">${typeLabel[t]}</span>`).join('')}</p>
+          </div>
+        </div>
+        <span class="badge ${a.status}">${BADGE_LABEL[a.status]}</span>
+      </div>
+      ${a.status==='open' ? `<div style="margin-top:10px;">${deadlineChip(a)}</div>` : ''}
+      <div class="meta-row">
+        <span>başvuru: ${fmtDate(a.appliedDate)}</span>
+        <span>son güncelleme: ${fmtDate(a.lastUpdate)}</span>
+      </div>
+      <div class="note">${a.note}</div>
+      ${a.links && a.links.length ? `<div class="links-row">${a.links.map(l=>`<a class="link-pill" href="${l.url}" target="_blank" rel="noopener"><img src="${LOGO(l.domain)}" onerror="this.style.display='none'">${l.label}</a>`).join('')}</div>` : ''}
+      <div class="actions">
+        ${a.status==='open' ? `
+          <button class="success" data-act="pending" data-id="${a.id}">Başvurdum</button>
+          <button class="danger" data-act="rejected" data-id="${a.id}">İlgilenmiyorum</button>
+        ` : `
+          ${a.status!=='approved' ? '<button class="success" data-act="approved" data-id="'+a.id+'">Onaylandı işaretle</button>' : ''}
+          ${a.status!=='rejected' ? '<button class="danger" data-act="rejected" data-id="'+a.id+'">Reddedildi işaretle</button>' : ''}
+          ${a.status!=='pending' ? '<button data-act="pending" data-id="'+a.id+'">Beklemede işaretle</button>' : ''}
+        `}
+      </div>
+    </div>
+  `).join('');
+}
+
+let showAddForm = false;
+
+function renderCompanies(){
+  const list = document.getElementById('list');
+  const seen = new Map();
+  apps.forEach(a=>{ if(!seen.has(a.company)) seen.set(a.company, a.logoDomain); });
+  const companies = [...seen.entries()].sort((a,b)=>a[0].localeCompare(b[0],'tr'));
+
+  const statusLabel = {open:'Açık', pending:'Beklemede', approved:'Onaylandı', rejected:'Reddedildi'};
+  const sortedApps = [...apps].sort((a,b)=>a.company.localeCompare(b.company,'tr'));
+
+  list.innerHTML = `
+    <button class="add-toggle-btn" id="toggle-add-form">${showAddForm ? '× Formu kapat' : '+ Yeni Şirket / İlan Ekle'}</button>
+
+    ${showAddForm ? `
+    <div class="add-form" id="add-form">
+      <div class="full"><label>Şirket adı *</label><input id="af-company" placeholder="ör. Vestel"></div>
+      <div><label>Pozisyon *</label><input id="af-position" placeholder="ör. Yazılım Stajyeri"></div>
+      <div><label>Durum</label>
+        <select id="af-status">
+          <option value="open">Başvuruya Açık</option>
+          <option value="pending">Başvurular (beklemede)</option>
+          <option value="approved">Onaylananlar</option>
+          <option value="rejected">Reddedilenler</option>
+        </select>
+      </div>
+      <div><label>Ülke</label>
+        <select id="af-country">
+          <option value="TR">Türkiye</option>
+          <option value="Yurt Dışı">Yurt Dışı</option>
+        </select>
+      </div>
+      <div><label>Son başvuru tarihi (opsiyonel)</label><input id="af-deadline" type="date"></div>
+      <div class="full checks">
+        <label><input type="checkbox" id="af-type-staj"> Staj</label>
+        <label><input type="checkbox" id="af-type-is"> İş</label>
+        <label><input type="checkbox" id="af-open" checked> Şu an başvuruya açık</label>
+      </div>
+      <div><label>Logo (site alan adı, opsiyonel)</label><input id="af-logo" placeholder="ör. vestel.com.tr"></div>
+      <div><label>Başvuru linki (opsiyonel)</label><input id="af-link" placeholder="https://..."></div>
+      <div class="full"><label>Not (opsiyonel)</label><textarea id="af-note" placeholder="Kısa açıklama..."></textarea></div>
+      <div class="full"><button class="add-toggle-btn" id="af-submit" style="margin:0;">Ekle</button></div>
+    </div>` : ''}
+
+    <div class="section-label">Şirket Logoları</div>
+    <div class="logo-grid">${companies.map(([name,domain])=>`
+      <div class="logo-card">
+        <img src="${LOGO(domain||'')}" onerror="this.style.display='none'">
+        <span>${name}</span>
+      </div>
+    `).join('')}</div>
+
+    <div class="section-label">Tüm Kayıtlar (${sortedApps.length}) — buradan silebilirsin</div>
+    ${sortedApps.map(a=>`
+      <div class="admin-row">
+        <div class="info">
+          <img src="${LOGO(a.logoDomain||'')}" onerror="this.style.display='none'">
+          <div class="txt">
+            <div class="c">${a.company} <span style="color:var(--text-dim);font-weight:400;">· ${statusLabel[a.status]}</span></div>
+            <div class="p">${a.position}</div>
+          </div>
+        </div>
+        <button class="del-btn" data-del-id="${a.id}">Sil</button>
+      </div>
+    `).join('')}
+  `;
+
+  document.getElementById('toggle-add-form').addEventListener('click', ()=>{
+    showAddForm = !showAddForm;
+    renderCompanies();
+  });
+  const submitBtn = document.getElementById('af-submit');
+  if(submitBtn) submitBtn.addEventListener('click', addCompanyEntry);
+  list.querySelectorAll('[data-del-id]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('Bu kaydı silmek istediğine emin misin?')) return;
+      apps = apps.filter(a=>a.id!==btn.dataset.delId);
+      await saveData();
+      renderCompanies();
+    });
+  });
+}
+
+async function addCompanyEntry(){
+  const company = document.getElementById('af-company').value.trim();
+  const position = document.getElementById('af-position').value.trim();
+  if(!company || !position){ alert('Şirket adı ve pozisyon zorunlu.'); return; }
+  const status = document.getElementById('af-status').value;
+  const country = document.getElementById('af-country').value;
+  const deadline = document.getElementById('af-deadline').value || null;
+  const type = [];
+  if(document.getElementById('af-type-staj').checked) type.push('staj');
+  if(document.getElementById('af-type-is').checked) type.push('is');
+  const applicationOpen = document.getElementById('af-open').checked;
+  let logoDomain = document.getElementById('af-logo').value.trim();
+  if(!logoDomain){
+    logoDomain = company.toLowerCase()
+      .replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ö/g,'o').replace(/ı/g,'i')
+      .replace(/[^a-z0-9]+/g,'') + '.com';
+  }
+  const linkUrl = document.getElementById('af-link').value.trim();
+  const note = document.getElementById('af-note').value.trim();
+  const today = new Date().toISOString().slice(0,10);
+
+  const entry = {
+    id: 'custom-' + Date.now(),
+    company, position, status,
+    type: type.length ? type : ['is'],
+    country, applicationOpen, deadline,
+    logoDomain,
+    links: linkUrl ? [{label:'Başvuru linki', url:linkUrl, domain:logoDomain}] : [],
+    appliedDate: today, lastUpdate: today,
+    note: note || 'Elle eklendi.'
+  };
+  apps.push(entry);
+  await saveData();
+  showAddForm = false;
+  renderCompanies();
+}
+
+async function renderCv(){
+  const list = document.getElementById('list');
+  const openPositions = apps.filter(a=>a.status==='open');
+  list.innerHTML = `
+    <div class="cv-box">
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 10px;">CV'ni PDF olarak yükle ya da metnini yapıştır. "Açık" durumdaki ${openPositions.length} pozisyonu CV'ne göre yapay zekayla puanlayıp en uygun olanları sırayla göstereceğim.</p>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <label for="cv-pdf-input" style="font-size:12px;background:var(--surface-raised);border:1px solid var(--hairline);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;">PDF Yükle</label>
+        <input type="file" id="cv-pdf-input" accept="application/pdf" style="display:none;">
+        <span id="cv-pdf-status" style="font-size:12px;color:var(--text-dim);"></span>
+      </div>
+      <textarea id="cv-input" placeholder="CV metnini buraya yapıştır ya da PDF yükle...">${cvAnalysis && cvAnalysis.cvText ? cvAnalysis.cvText : ''}</textarea>
+      <br>
+      <button id="cv-analyze-btn" ${cvAnalyzing?'disabled':''}>${cvAnalyzing ? 'Analiz ediliyor...' : 'Yapay Zeka ile Analiz Et'}</button>
+    </div>
+    <div id="cv-results" style="margin-top:20px;"></div>
+  `;
+  document.getElementById('cv-analyze-btn').addEventListener('click', runCvAnalysis);
+  document.getElementById('cv-pdf-input').addEventListener('change', handlePdfUpload);
+  if(cvAnalysis && cvAnalysis.results){ renderCvResults(cvAnalysis.results); }
+}
+
+async function handlePdfUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('cv-pdf-status');
+  statusEl.textContent = 'PDF okunuyor...';
+  try{
+    if(window.pdfjsLib && !pdfjsLib.GlobalWorkerOptions.workerSrc){
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    let text = '';
+    for(let i=1; i<=pdf.numPages; i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it=>it.str).join(' ') + '\n\n';
+    }
+    text = text.trim();
+    if(!text){
+      statusEl.textContent = 'PDF içinden metin çıkarılamadı (taranmış görsel olabilir).';
+      return;
+    }
+    document.getElementById('cv-input').value = text;
+    statusEl.textContent = `"${file.name}" yüklendi, ${pdf.numPages} sayfa okundu. Şimdi "Yapay Zeka ile Analiz Et" butonuna basabilirsin.`;
+    cvAnalysis = {cvText: text, results: null};
+  }catch(err){
+    console.error(err);
+    statusEl.textContent = 'PDF okunurken bir hata oluştu, metni elle yapıştırabilirsin.';
+  }
+}
+
+function renderCvResults(results){
+  const el = document.getElementById('cv-results');
+  if(!el) return;
+  if(!results.length){ el.innerHTML = '<div class="empty">Sonuç yok.</div>'; return; }
+  el.innerHTML = results.map(r=>`
+    <div class="match-card">
+      <div class="match-top">
+        <div>
+          <p class="company" style="margin-bottom:2px;">${r.company}</p>
+          <p class="position" style="margin:0;">${r.position}</p>
+        </div>
+        <span class="match-score">%${r.score}</span>
+      </div>
+      <div class="note">${r.reason}</div>
+    </div>
+  `).join('');
+}
+
+async function runCvAnalysis(){
+  const cvText = document.getElementById('cv-input').value.trim();
+  if(!cvText){ alert('Önce CV metnini yapıştır.'); return; }
+  cvAnalyzing = true;
+  cvAnalysis = {cvText, results:null};
+  renderCv();
+
+  const openPositions = apps.filter(a=>a.status==='open').map(a=>({
+    id:a.id, company:a.company, position:a.position, note:a.note, type:a.type, country:a.country
+  }));
+
+  const prompt = `Aşağıda bir öğrencinin CV'si ve açık staj/iş pozisyonları listesi var. Her pozisyon için CV'ye göre bir uygunluk skoru (0-100) ve kısa bir gerekçe (tek cümle, Türkçe) üret. Sadece JSON döndür, başka hiçbir şey yazma: {"results":[{"id":"...", "score":0, "reason":"..."}]}. Skorları büyükten küçüğe anlamlı şekilde dağıt, hepsine aynı skoru verme.
+
+CV:
+${cvText}
+
+Pozisyonlar:
+${JSON.stringify(openPositions)}`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{role:"user", content: prompt}]
+      })
+    });
+    const data = await response.json();
+    const textBlock = (data.content||[]).find(c=>c.type==='text');
+    let raw = textBlock ? textBlock.text : '{}';
+    raw = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    const byId = {};
+    openPositions.forEach(p=>byId[p.id]=p);
+    const results = (parsed.results||[])
+      .filter(r=>byId[r.id])
+      .map(r=>({...r, company:byId[r.id].company, position:byId[r.id].position}))
+      .sort((a,b)=>b.score-a.score);
+    cvAnalysis = {cvText, results};
+  }catch(e){
+    cvAnalysis = {cvText, results:[]};
+    console.error('CV analiz hatası', e);
+  }
+  cvAnalyzing = false;
+  renderCv();
+}
+
+
+
+function renderStats(){
+  const counts = {
+    open: apps.filter(a=>a.status==='open').length,
+    pending: apps.filter(a=>a.status==='pending').length,
+    approved: apps.filter(a=>a.status==='approved').length,
+    rejected: apps.filter(a=>a.status==='rejected').length,
+  };
+  document.getElementById('stats-strip').innerHTML = `
+    <div class="stats-strip">
+      <div class="stat-chip open"><div class="num">${counts.open}</div><div class="lbl">Açık Fırsat</div></div>
+      <div class="stat-chip pending"><div class="num">${counts.pending}</div><div class="lbl">Beklemede</div></div>
+      <div class="stat-chip approved"><div class="num">${counts.approved}</div><div class="lbl">Onaylandı</div></div>
+      <div class="stat-chip rejected"><div class="num">${counts.rejected}</div><div class="lbl">Reddedildi</div></div>
+    </div>
+    ${buildTypeDonut()}
+  `;
+}
+
+function buildTypeDonut(){
+  const stajCount = apps.filter(a=>(a.type||[]).includes('staj')).length;
+  const isCount = apps.filter(a=>(a.type||[]).includes('is')).length;
+  const total = stajCount + isCount;
+  if(total===0) return '';
+  const r = 30, circ = 2*Math.PI*r;
+  const stajLen = circ * (stajCount/total);
+  const isLen = circ - stajLen;
+  return `
+    <div class="type-donut-row">
+      <svg width="76" height="76" viewBox="0 0 76 76">
+        <circle cx="38" cy="38" r="${r}" fill="none" stroke="var(--hairline)" stroke-width="10"/>
+        <circle cx="38" cy="38" r="${r}" fill="none" stroke="var(--purple)" stroke-width="10"
+          stroke-dasharray="${stajLen} ${circ-stajLen}" stroke-linecap="round" transform="rotate(-90 38 38)"/>
+        <circle cx="38" cy="38" r="${r}" fill="none" stroke="var(--blue)" stroke-width="10"
+          stroke-dasharray="${isLen} ${circ-isLen}" stroke-dashoffset="-${stajLen}" stroke-linecap="round" transform="rotate(-90 38 38)"/>
+      </svg>
+      <div class="donut-legend">
+        <span><span class="dot" style="background:var(--purple);"></span>Staj — ${stajCount}</span>
+        <span><span class="dot" style="background:var(--blue);"></span>İş — ${isCount}</span>
+      </div>
+    </div>
+  `;
+}
+
+async function initTheme(){
+  let theme = 'dark';
+  try{
+    const res = await window.storage.get('theme', false);
+    if(res && res.value) theme = res.value;
+  }catch(e){}
+  applyTheme(theme);
+}
+function applyTheme(theme){
+  document.body.setAttribute('data-theme', theme);
+  document.querySelectorAll('#theme-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.theme===theme));
+}
+document.getElementById('theme-toggle').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  applyTheme(btn.dataset.theme);
+  try{ await window.storage.set('theme', btn.dataset.theme, false); }catch(err){}
+});
+
+
+
+let scanning = false;
+let scanResults = [];
+let lastScanTime = null;
+let autoScanInterval = null;
+
+function renderScanUI(){
+  const statusEl = document.getElementById('scan-status');
+  const btn = document.getElementById('scan-now-btn');
+  if(scanning){
+    statusEl.textContent = 'Taranıyor... (bu bir dakika kadar sürebilir)';
+    btn.disabled = true; btn.textContent = 'Taranıyor...';
+  } else {
+    statusEl.textContent = lastScanTime ? `Son tarama: ${lastScanTime.toLocaleTimeString('tr-TR')}` : 'Henüz taranmadı.';
+    btn.disabled = false; btn.textContent = 'Şimdi Tara';
+  }
+  const resEl = document.getElementById('scan-results');
+  if(!scanResults.length){
+    resEl.innerHTML = '';
+    return;
+  }
+  resEl.innerHTML = scanResults.map((r,i)=>`
+    <div class="scan-result-card">
+      <div class="txt">
+        <div class="c">${r.company} <span style="color:var(--text-dim);font-weight:400;">· ${r.country||'?'}</span></div>
+        <div class="p">${r.position}</div>
+        ${r.url ? `<div class="src">${r.url}</div>` : ''}
+      </div>
+      <div class="btns">
+        <button class="add-scan-btn" data-scan-add="${i}">Panele Ekle</button>
+        <button data-scan-dismiss="${i}">Yoksay</button>
+      </div>
+    </div>
+  `).join('');
+  resEl.querySelectorAll('[data-scan-add]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const r = scanResults[parseInt(b.dataset.scanAdd)];
+      const today = new Date().toISOString().slice(0,10);
+      apps.push({
+        id: 'scan-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+        company: r.company, position: r.position,
+        status: 'open', type: r.type && r.type.length ? r.type : ['is'],
+        country: r.country==='TR' ? 'TR' : 'Yurt Dışı',
+        applicationOpen: true, deadline: r.deadline || null,
+        logoDomain: r.logoDomain || (r.company.toLowerCase().replace(/[^a-z0-9]+/g,'')+'.com'),
+        links: r.url ? [{label:'İlan', url:r.url, domain:(r.logoDomain||'')}] : [],
+        appliedDate: today, lastUpdate: today,
+        note: r.note || 'Otomatik web taramasıyla bulundu.'
+      });
+      await saveData();
+      scanResults.splice(parseInt(b.dataset.scanAdd),1);
+      render();
+    });
+  });
+  resEl.querySelectorAll('[data-scan-dismiss]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      scanResults.splice(parseInt(b.dataset.scanDismiss),1);
+      renderScanUI();
+    });
+  });
+}
+
+// 1. Aynı (Mükerrer) İlanları Engelleme ve Panele Ekleme
+function addNewJobsToPanel(newJobs) {
+  let existingJobs = apps;
+  let addedCount = 0;
+  const today = new Date().toISOString().slice(0,10);
+
+  newJobs.forEach(job => {
+    // İlan linki veya (Şirket + Pozisyon) aynıysa tekrar ekleme
+    const isDuplicate = existingJobs.some(e => 
+      (job.url && e.links && e.links.some(l => l.url === job.url)) || 
+      (e.company.toLowerCase() === job.company.toLowerCase() && 
+       e.position.toLowerCase() === job.position.toLowerCase())
+    );
+
+    if (!isDuplicate) {
+      existingJobs.push({
+        id: 'scan-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+        company: job.company,
+        position: job.position,
+        country: job.country || 'TR',
+        status: 'open',
+        type: job.type || ['staj'],
+        applicationOpen: true,
+        logoDomain: job.company.toLowerCase().replace(/[^a-z0-9]+/g,'') + '.com',
+        links: job.url ? [{label: 'İlan Linki', url: job.url, domain: job.company.toLowerCase().replace(/[^a-z0-9]+/g,'') + '.com'}] : [],
+        appliedDate: today,
+        lastUpdate: today,
+        note: job.note || 'Tavily + Gemini ile otomatik eklendi.'
+      });
+      addedCount++;
+    }
+  });
+
+  saveData();
+  if (typeof render === 'function') render();
+  return addedCount;
+}
+
+// 2. Ana Tarama Fonksiyonu (Tavily Search + Gemini AI)
+async function runScan() {
+  if (scanning) return;
+  scanning = true;
+  renderScanUI();
+
+  const scanBtn = document.getElementById('scan-now-btn');
+  if (scanBtn) scanBtn.disabled = true;
+
+  const TAVILY_API_KEY = "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";
+  const GEMINI_API_KEY = "AQ.Ab8RN6IBmuJ_dqCUqfcM6r4v80KAKfTPL_xgfp36O3_IRq6CAw";
+
+  try {
+    // A) Tavily ile Kariyer.net, LinkedIn ve Savunma/Sosyal Medya Duyurularını Tara
+    const searchRes = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query: "site:kariyer.net OR site:linkedin.com/jobs OR site:savunmakariyer.com 'staj' OR 'yazılım mühendisi' OR 'aday mühendislik' 2026",
+        search_depth: "basic",
+        max_results: 15
+      })
+    });
+    const searchData = await searchRes.json();
+
+    // B) Gemini 2.5 Flash ile İlanları Süz
+    const promptText = `
+    Aşağıdaki arama sonuçlarından SADECE Mühendislik ve Yazılım ile ilgili aktif STAJ ve İŞ İLANLARINI ayıkla.
+    İlgisiz içerikleri ve haberleri ele.
+    SADECE şu JSON yapısında yanıt ver:
+    {
+      "results": [
+        {
+          "company": "Şirket Adı",
+          "position": "Pozisyon Adı",
+          "country": "TR",
+          "url": "İlan Linki",
+          "type": ["staj"],
+          "note": "Kaynak"
+        }
+      ]
+    }
+    Arama Verisi: ${JSON.stringify(searchData.results)}`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const aiRes = await fetch(geminiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+    });
+
+    const aiData = await aiRes.json();
+    const rawText = aiData.candidates[0].content.parts[0].text;
+    const cleanJson = JSON.parse(rawText.replace(/```json|```/g, "").trim());
+
+    // C) Panele Aktar ve Bildir
+    if (cleanJson.results && cleanJson.results.length > 0) {
+      const addedCount = addNewJobsToPanel(cleanJson.results);
+      alert(`${cleanJson.results.length} ilan bulundu, bunlardan ${addedCount} tanesi YENİ olarak panele eklendi!`);
+    } else {
+      alert("Yeni ilan bulunamadı.");
+    }
+
+    lastScanTime = new Date();
+
+  } catch (err) {
+    console.error("Tarama Hatası:", err);
+    alert("Tarama yapılırken bir sorun oluştu. Gemini API Key'ini kontrol etmeyi unutma.");
+  } finally {
+    scanning = false;
+    if (scanBtn) scanBtn.disabled = false;
+    renderScanUI();
+  }
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{ activeTab=t.dataset.tab; render(); });
+});
+
+document.getElementById('scan-now-btn').addEventListener('click', runScan);
+document.getElementById('auto-scan-toggle').addEventListener('change', (e)=>{
+  if(e.target.checked){
+    runScan();
+    autoScanInterval = setInterval(runScan, 30*60*1000);
+  } else {
+    if(autoScanInterval) clearInterval(autoScanInterval);
+    autoScanInterval = null;
+  }
+});
+
+
+
+document.getElementById('type-filter').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.filter-btn');
+  if(!btn) return;
+  typeFilter = btn.dataset.type;
+  document.querySelectorAll('#type-filter .filter-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  render();
+});
+
+document.getElementById('country-filter').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.filter-btn');
+  if(!btn) return;
+  countryFilter = btn.dataset.country;
+  document.querySelectorAll('#country-filter .filter-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  render();
+});
+
+document.getElementById('company-filter').addEventListener('change', (e)=>{
+  companyFilter = e.target.value;
+  render();
+});
+
+document.getElementById('show-closed-toggle').addEventListener('click', ()=>{
+  showClosed = !showClosed;
+  render();
+});
+
+document.getElementById('list').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-act]');
+  if(!btn) return;
+  const app = apps.find(a=>a.id===btn.dataset.id);
+  if(app){
+    app.status = btn.dataset.act;
+    app.lastUpdate = new Date().toISOString().slice(0,10);
+    await saveData();
+    render();
+  }
+});
+
+document.getElementById('reset-btn').addEventListener('click', async ()=>{
+  apps = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  await saveData();
+  render();
+});
+
+loadData();
+initTheme();
+</script>
+</body>
+</html>
