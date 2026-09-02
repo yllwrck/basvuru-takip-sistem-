@@ -1706,7 +1706,7 @@ async function runScan() {
   if (scanBtn) scanBtn.disabled = true;
 
   const TAVILY_API_KEY = "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";
-  const GEMINI_API_KEY = "AQ.Ab8RN6IBmuJ_dqCUqfcM6r4v80KAKfTPL_xgfp36O3_IRq6CAw";
+  const GEMINI_API_KEY = "AQ.Ab8RN6J3PBzmjx6V3UiHUJrjHvQWY5YevV3rvKkWVZSi2IJBeA";
 
   try {
     // A) Tavily ile Kariyer.net, LinkedIn ve Savunma/Sosyal Medya Duyurularını Tara
@@ -1741,7 +1741,7 @@ async function runScan() {
     }
     Arama Verisi: ${JSON.stringify(searchData.results)}`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`;
     const aiRes = await fetch(geminiUrl, {
       method: "POST",
       headers: {
