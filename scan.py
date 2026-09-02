@@ -23,7 +23,7 @@ def tavily_search():
 def parse_with_gemini(search_data):
     # DEĞİŞİKLİK: anahtar artık URL'de ?key= ile değil, x-goog-api-key header'ıyla gönderiliyor.
     # Yeni "AQ." formatlı anahtarlar query parametresiyle 401 hatası veriyor.
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
     prompt = f"""
     Aşağıdaki arama sonuçlarından SADECE Mühendislik/Yazılım aktif staj ve iş ilanlarını çıkar.
     SADECE JSON döndür:
