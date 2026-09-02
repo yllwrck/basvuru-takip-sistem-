@@ -1,0 +1,29 @@
+name: 2 Saatte Bir Oto Ilan Taramasi
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu Cek
+        uses: actions/checkout@v3
+
+      - name: Python Kur
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Taramayı Çalıştır
+        run: python scan.py
+
+      - name: Değişiklikleri Depoya Kaydet
+        run: |
+          git config --global user.name 'Oto-Bot'
+          git config --global user.email 'bot@users.noreply.github.com'
+          git add jobs.json
+          git commit -m "Auto-update: Yeni ilanlar eklendi" || exit 0
+          git push
