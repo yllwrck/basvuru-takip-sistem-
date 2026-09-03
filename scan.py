@@ -7,17 +7,35 @@ TAVILY_API_KEY = os.environ["TAVILY_API_KEY"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 
-def tavily_search():
+def _tavily_call(query, depth="basic", max_results=10):
     url = "https://api.tavily.com/search"
     payload = json.dumps({
         "api_key": TAVILY_API_KEY,
-        "query": "site:kariyer.net OR site:linkedin.com/jobs OR site:savunmakariyer.com 'staj' OR 'yazılım mühendisi' OR 'aday mühendislik' 2026",
-        "search_depth": "basic",
-        "max_results": 10
+        "query": query,
+        "search_depth": depth,
+        "max_results": max_results,
+        "include_raw_content": True
     }).encode('utf-8')
     req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'})
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())
+
+
+def tavily_search():
+    # Genel sorgu: kariyer.net + linkedin
+    general = _tavily_call(
+        "site:kariyer.net OR site:linkedin.com/jobs 'staj' OR 'yazılım mühendisi' OR 'aday mühendislik' 2026",
+        depth="basic", max_results=10
+    )
+
+    # savunmakariyer.com bot-koruması olan bir SPA olduğu için ayrı ve daha derin bir sorgu gerekiyor.
+    savunma = _tavily_call(
+        "site:savunmakariyer.com staj OR mühendis OR yazılım OR aday",
+        depth="advanced", max_results=10
+    )
+
+    combined_results = (general.get("results") or []) + (savunma.get("results") or [])
+    return {"results": combined_results}
 
 
 def parse_with_gemini(search_data):
