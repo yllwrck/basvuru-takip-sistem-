@@ -8,48 +8,54 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root{
-  --bg:#14171F;
-  --surface:#1B2029;
-  --surface-raised:#232936;
-  --hairline:#2B3242;
-  --text:#EDEFF3;
-  --text-dim:#8D95A8;
-  --amber:#F0A94E;
+  --bg:#0D0F14;
+  --surface:#161922;
+  --surface-raised:#1F2330;
+  --hairline:#272C3A;
+  --text:#EEF0F5;
+  --text-dim:#8991A6;
+  --accent:#2FBEB0;
+  --accent-bg:rgba(47,190,176,0.14);
+  --amber:#E3A34E;
   --green:#4FBF8B;
-  --red:#EF6461;
-  --blue:#5B8DEF;
+  --red:#E2635F;
+  --blue:#5B93EF;
   --purple:#9B8AFB;
-  --amber-bg:rgba(240,169,78,0.14);
-  --green-bg:rgba(79,191,139,0.14);
-  --red-bg:rgba(239,100,97,0.14);
-  --blue-bg:rgba(91,141,239,0.14);
+  --amber-bg:rgba(227,163,78,0.13);
+  --green-bg:rgba(79,191,139,0.13);
+  --red-bg:rgba(226,99,95,0.13);
+  --blue-bg:rgba(91,147,239,0.13);
   --purple-bg:rgba(155,138,251,0.14);
-  --shadow:0 8px 24px rgba(0,0,0,0.28);
+  --shadow:0 10px 28px rgba(0,0,0,0.35);
   --card-bg-img:none;
 }
 body[data-theme="light"]{
-  --bg:#F5F6FA;
+  --bg:#F6F6FA;
   --surface:#FFFFFF;
-  --surface-raised:#F0F2F8;
-  --hairline:#E2E5EF;
-  --text:#1A1E2B;
-  --text-dim:#666F85;
-  --amber:#C97A1E;
-  --green:#1F9467;
-  --red:#D3453F;
-  --blue:#3563DB;
+  --surface-raised:#F0F1F7;
+  --hairline:#E3E4EE;
+  --text:#191B24;
+  --text-dim:#6A7188;
+  --accent:#178A7E;
+  --accent-bg:rgba(23,138,126,0.09);
+  --amber:#B97417;
+  --green:#1D8F63;
+  --red:#C8443F;
+  --blue:#2F5FD6;
   --purple:#6B57E8;
-  --amber-bg:rgba(201,122,30,0.10);
-  --green-bg:rgba(31,148,103,0.10);
-  --red-bg:rgba(211,69,63,0.10);
-  --blue-bg:rgba(53,99,219,0.10);
+  --amber-bg:rgba(185,116,23,0.09);
+  --green-bg:rgba(29,143,99,0.09);
+  --red-bg:rgba(200,68,63,0.09);
+  --blue-bg:rgba(47,95,214,0.09);
   --purple-bg:rgba(107,87,232,0.10);
-  --shadow:0 6px 18px rgba(30,40,70,0.08);
+  --shadow:0 6px 18px rgba(30,40,70,0.07);
 }
 *{box-sizing:border-box;}
 body{
   margin:0;
-  background:var(--bg);
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -5%, var(--accent-bg), transparent 60%),
+    var(--bg);
   color:var(--text);
   transition:background .2s, color .2s;
   font-family:'IBM Plex Sans',sans-serif;
@@ -77,37 +83,50 @@ body{
 
 .sidebar{
   border-right:1px solid var(--hairline);
-  padding:28px 20px;
+  padding:28px 18px;
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:4px;
 }
 .brand{
-  font-size:13px;
-  letter-spacing:0.02em;
-  color:var(--text-dim);
-  margin-bottom:24px;
-  line-height:1.5;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:26px;
+}
+.brand .mark{
+  width:34px;height:34px;
+  border-radius:9px;
+  background:linear-gradient(135deg, var(--accent), var(--blue));
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;
+  font-size:14px;
+  color:#0D0F14;
 }
 .brand strong{
   display:block;
-  font-size:16px;
+  font-size:14.5px;
   color:var(--text);
   font-weight:600;
-  margin-bottom:2px;
+  letter-spacing:-0.01em;
+}
+.brand span{
+  font-size:11.5px;
+  color:var(--text-dim);
 }
 
 .tab{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:11px 12px;
-  border-radius:8px;
+  padding:10px 12px;
+  border-radius:9px;
   cursor:pointer;
   color:var(--text-dim);
-  font-size:14px;
+  font-size:13.5px;
   font-weight:500;
-  border:1px solid transparent;
+  border-left:2px solid transparent;
   white-space:nowrap;
   transition:background .15s, color .15s;
 }
@@ -115,11 +134,11 @@ body{
 .tab.active{
   background:var(--surface-raised);
   color:var(--text);
-  border-color:var(--hairline);
+  border-left:2px solid var(--accent);
 }
 .tab .count{
   font-family:'IBM Plex Mono',monospace;
-  font-size:12px;
+  font-size:11.5px;
   color:var(--text-dim);
   background:var(--bg);
   border:1px solid var(--hairline);
@@ -129,10 +148,6 @@ body{
   text-align:center;
 }
 .tab.active .count{color:var(--text);}
-.tab[data-tab="pending"].active{color:var(--amber);border-color:var(--amber);}
-.tab[data-tab="approved"].active{color:var(--green);border-color:var(--green);}
-.tab[data-tab="rejected"].active{color:var(--red);border-color:var(--red);}
-.tab[data-tab="open"].active{color:var(--blue);border-color:var(--blue);}
 
 .footer-note{
   margin-top:auto;
@@ -148,13 +163,13 @@ body{
   background:var(--surface-raised);
   border:1px solid var(--hairline);
   color:var(--text);
-  padding:8px 10px;
-  border-radius:7px;
+  padding:9px 10px;
+  border-radius:8px;
   font-size:12px;
   font-family:'IBM Plex Sans',sans-serif;
   cursor:pointer;
 }
-.footer-note button:hover{border-color:var(--text-dim);}
+.footer-note button:hover{border-color:var(--accent);color:var(--accent);}
 
 .theme-toggle{
   display:flex;
@@ -191,28 +206,26 @@ body{
 .stat-chip{
   border-radius:12px;
   padding:14px 16px;
+  background:var(--surface);
   border:1px solid var(--hairline);
-  box-shadow:var(--shadow);
+  border-top:2px solid var(--hairline);
 }
 .stat-chip .num{
   font-family:'IBM Plex Mono',monospace;
   font-size:22px;
   font-weight:600;
   line-height:1;
+  color:var(--text);
 }
 .stat-chip .lbl{
   font-size:11px;
   color:var(--text-dim);
   margin-top:6px;
 }
-.stat-chip.open{background:var(--blue-bg);}
-.stat-chip.open .num{color:var(--blue);}
-.stat-chip.pending{background:var(--amber-bg);}
-.stat-chip.pending .num{color:var(--amber);}
-.stat-chip.approved{background:var(--green-bg);}
-.stat-chip.approved .num{color:var(--green);}
-.stat-chip.rejected{background:var(--red-bg);}
-.stat-chip.rejected .num{color:var(--red);}
+.stat-chip.open{border-top-color:var(--blue);}
+.stat-chip.pending{border-top-color:var(--amber);}
+.stat-chip.approved{border-top-color:var(--green);}
+.stat-chip.rejected{border-top-color:var(--red);}
 
 .type-donut-row{
   display:flex;
@@ -223,7 +236,6 @@ body{
   border-radius:12px;
   padding:14px 18px;
   margin-bottom:22px;
-  box-shadow:var(--shadow);
 }
 .donut-legend{
   display:flex;
@@ -254,8 +266,9 @@ body{
   flex-wrap:wrap;
 }
 h1{
-  font-size:22px;
-  font-weight:600;
+  font-size:23px;
+  font-weight:700;
+  letter-spacing:-0.01em;
   margin:0;
 }
 .updated{
@@ -274,77 +287,105 @@ h1{
 .card{
   background:var(--surface);
   border:1px solid var(--hairline);
-  border-radius:12px;
-  padding:18px 20px;
-  margin-bottom:12px;
-  box-shadow:var(--shadow);
-  transition:transform .12s, box-shadow .12s;
+  border-radius:14px;
+  padding:16px 18px;
+  margin-bottom:10px;
+  transition:border-color .12s;
 }
-.card:hover{transform:translateY(-1px);}
+.card:hover{border-color:var(--text-dim);}
 .card-top{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
+  gap:14px;
+}
+.card-main{
+  display:flex;
   gap:12px;
+  min-width:0;
+}
+.card-logo{
+  width:34px;height:34px;
+  border-radius:9px;
+  object-fit:contain;
+  background:#fff;
+  border:1px solid var(--hairline);
+  flex-shrink:0;
+  margin-top:1px;
 }
 .company{
   font-size:15px;
   font-weight:600;
-  margin:0 0 2px;
+  margin:0;
+  line-height:1.35;
 }
-.position{
+.position-line{
   font-size:13px;
   color:var(--text-dim);
-  margin:0;
+  margin:2px 0 0;
+  line-height:1.5;
+}
+.position-line .sep{
+  margin:0 6px;
+  opacity:.55;
 }
 .badge{
-  font-size:11px;
+  font-size:12px;
   font-weight:500;
-  padding:3px 9px;
+  padding:4px 11px;
   border-radius:20px;
   white-space:nowrap;
-  font-family:'IBM Plex Mono',monospace;
+  flex-shrink:0;
 }
 .badge.pending{color:var(--amber);background:var(--amber-bg);}
 .badge.approved{color:var(--green);background:var(--green-bg);}
 .badge.rejected{color:var(--red);background:var(--red-bg);}
 .badge.open{color:var(--blue);background:var(--blue-bg);}
+.badge.urgent{color:var(--red);background:var(--red-bg);}
+.badge.warn{color:var(--amber);background:var(--amber-bg);}
+.badge.rolling{color:var(--blue);background:var(--blue-bg);}
+.badge.closed{color:var(--text-dim);background:var(--surface-raised);}
 
 .meta-row{
-  display:flex;
-  gap:18px;
-  margin-top:12px;
-  font-size:12px;
+  margin-top:10px;
+  font-size:12.5px;
   color:var(--text-dim);
-  font-family:'IBM Plex Mono',monospace;
-  flex-wrap:wrap;
 }
 .note{
   margin-top:10px;
   font-size:13px;
-  color:var(--text);
-  line-height:1.5;
-  border-left:2px solid var(--hairline);
-  padding-left:10px;
+  color:var(--text-dim);
+  line-height:1.55;
 }
 .actions{
   margin-top:14px;
   display:flex;
-  gap:8px;
+  align-items:center;
+  gap:16px;
 }
 .actions button{
-  font-size:12px;
+  font-size:13px;
   font-family:'IBM Plex Sans',sans-serif;
-  padding:6px 11px;
-  border-radius:6px;
-  border:1px solid var(--hairline);
-  background:transparent;
-  color:var(--text-dim);
   cursor:pointer;
+  border:none;
+  background:none;
+  padding:0;
 }
-.actions button:hover{color:var(--text);border-color:var(--text-dim);}
-.actions button.danger:hover{color:var(--red);border-color:var(--red);}
-.actions button.success:hover{color:var(--green);border-color:var(--green);}
+.actions button.primary-act{
+  color:#0D0F14;
+  background:var(--accent);
+  border:1px solid var(--accent);
+  font-weight:600;
+  padding:7px 14px;
+  border-radius:8px;
+}
+.actions button.primary-act:hover{opacity:.88;}
+.actions button.text-act{
+  color:var(--text-dim);
+}
+.actions button.text-act:hover{color:var(--text);text-decoration:underline;}
+.actions button.text-act.danger:hover{color:var(--red);}
+.actions button.text-act.success:hover{color:var(--green);}
 
 .filters{
   display:flex;
@@ -372,8 +413,9 @@ h1{
   cursor:pointer;
 }
 .filter-btn.active{
-  background:var(--surface-raised);
-  color:var(--text);
+  background:var(--accent-bg);
+  color:var(--accent);
+  font-weight:500;
 }
 select#company-filter{
   font-size:12px;
@@ -384,55 +426,6 @@ select#company-filter{
   padding:8px 10px;
   border-radius:8px;
   cursor:pointer;
-}
-.type-tag{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:10px;
-  color:var(--text-dim);
-  border:1px solid var(--hairline);
-  border-radius:4px;
-  padding:1px 6px;
-  margin-left:6px;
-}
-.window-tag{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:10px;
-  border-radius:4px;
-  padding:1px 6px;
-  margin-left:6px;
-}
-.window-tag.open{color:var(--green);border:1px solid var(--green);}
-.window-tag.closed{color:var(--text-dim);border:1px solid var(--hairline);}
-.deadline-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  font-size:11px;
-  font-family:'IBM Plex Mono',monospace;
-  padding:4px 10px;
-  border-radius:20px;
-  font-weight:500;
-}
-.deadline-chip::before{
-  content:"";
-  width:6px;height:6px;
-  border-radius:50%;
-  display:inline-block;
-}
-.deadline-chip.urgent{color:var(--red);background:var(--red-bg);}
-.deadline-chip.urgent::before{background:var(--red);}
-.deadline-chip.warn{color:var(--amber);background:var(--amber-bg);}
-.deadline-chip.warn::before{background:var(--amber);}
-.deadline-chip.open{color:var(--green);background:var(--green-bg);}
-.deadline-chip.open::before{background:var(--green);}
-.deadline-chip.rolling{color:var(--blue);background:var(--blue-bg);}
-.deadline-chip.rolling::before{background:var(--blue);}
-.deadline-chip.closed{color:var(--text-dim);background:var(--surface-raised);}
-.deadline-chip.closed::before{background:var(--text-dim);}
-.country-tag{
-  font-size:11px;
-  color:var(--text-dim);
-  font-family:'IBM Plex Mono',monospace;
 }
 .links-row{
   margin-top:12px;
@@ -445,17 +438,16 @@ select#company-filter{
   align-items:center;
   gap:6px;
   font-size:12px;
-  color:var(--text);
+  color:var(--text-dim);
   text-decoration:none;
-  background:var(--surface-raised);
   border:1px solid var(--hairline);
   border-radius:20px;
   padding:4px 12px 4px 6px;
 }
-.link-pill:hover{border-color:var(--text-dim);}
+.link-pill:hover{color:var(--text);border-color:var(--text-dim);}
 .link-pill img{
-  width:16px;
-  height:16px;
+  width:15px;
+  height:15px;
   border-radius:4px;
   object-fit:cover;
   background:#fff;
@@ -671,7 +663,7 @@ select#company-filter{
 <body>
 <div class="shell">
   <div class="sidebar">
-    <div class="brand"><strong>Başvuru Paneli</strong>tahasarikaya05@gmail.com</div>
+    <div class="brand"><div class="mark">B</div><div><strong>Başvuru Paneli</strong><span>tahasarikaya05@gmail.com</span></div></div>
     <div class="tab" data-tab="open"><span>Başvuruya Açık</span><span class="count" id="count-open">0</span></div>
     <div class="tab" data-tab="pending"><span>Başvurular</span><span class="count" id="count-pending">0</span></div>
     <div class="tab" data-tab="approved"><span>Onaylananlar</span><span class="count" id="count-approved">0</span></div>
@@ -1156,23 +1148,23 @@ function daysLeftLabel(a){
   return `Bitimine ${diff} gün`;
 }
 
-function deadlineChip(a){
+function deadlineInfo(a){
   let variant = 'open', label;
   if(a.deadline){
     const today = new Date(); today.setHours(0,0,0,0);
     const dl = new Date(a.deadline+"T00:00:00");
     const diff = Math.round((dl-today)/86400000);
-    if(diff < 0){ variant='closed'; label = `Süresi doldu · ${Math.abs(diff)} gün önce`; }
-    else if(diff===0){ variant='urgent'; label = 'Bugün son gün!'; }
-    else if(diff<=5){ variant='urgent'; label = `Bitimine ${diff} gün`; }
+    if(diff < 0){ variant='closed'; label = `Süresi doldu (${Math.abs(diff)} gün önce)`; }
+    else if(diff===0){ variant='urgent'; label = 'Bugün son gün'; }
+    else if(diff<=5){ variant='urgent'; label = `Son ${diff} gün`; }
     else if(diff<=14){ variant='warn'; label = `Bitimine ${diff} gün`; }
     else { variant='open'; label = `Bitimine ${diff} gün`; }
   } else if(a.applicationOpen===false){
     variant='closed'; label='Sezonu kapalı';
   } else {
-    variant='rolling'; label='Sürekli / rotasyonlu açık';
+    variant='rolling'; label='Sürekli açık';
   }
-  return `<span class="deadline-chip ${variant}">${label}</span>`;
+  return {variant, label};
 }
 
 async function loadData(){
@@ -1258,37 +1250,40 @@ function render(){
     return;
   }
   const typeLabel = {staj:"Staj", is:"İş"};
-  list.innerHTML = items.map(a=>`
+  list.innerHTML = items.map(a=>{
+    const d = deadlineInfo(a);
+    const countryTxt = a.countryLabel || (a.country==='TR' ? 'Türkiye' : 'Yurt Dışı');
+    const typeTxt = (a.type||[]).map(t=>typeLabel[t]).join(', ');
+    return `
     <div class="card">
       <div class="card-top">
-        <div style="display:flex;gap:10px;">
-          <img src="${LOGO(a.logoDomain||'')}" onerror="this.style.display='none'" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#fff;border:1px solid var(--hairline);flex-shrink:0;">
+        <div class="card-main">
+          <img class="card-logo" src="${LOGO(a.logoDomain||'')}" onerror="this.style.display='none'">
           <div>
-            <p class="company">${a.company} <span class="country-tag">· ${a.countryLabel || (a.country==='TR' ? 'Türkiye' : 'Yurt Dışı')}</span></p>
-            <p class="position">${a.position}${(a.type||[]).map(t=>`<span class="type-tag">${typeLabel[t]}</span>`).join('')}</p>
+            <p class="company">${a.company}</p>
+            <p class="position-line">${a.position}<span class="sep">·</span>${countryTxt}${typeTxt ? `<span class="sep">·</span>${typeTxt}` : ''}</p>
           </div>
         </div>
-        <span class="badge ${a.status}">${BADGE_LABEL[a.status]}</span>
+        ${a.status==='open'
+          ? `<span class="badge ${d.variant}">${d.label}</span>`
+          : `<span class="badge ${a.status}">${BADGE_LABEL[a.status]}</span>`
+        }
       </div>
-      ${a.status==='open' ? `<div style="margin-top:10px;">${deadlineChip(a)}</div>` : ''}
-      <div class="meta-row">
-        <span>başvuru: ${fmtDate(a.appliedDate)}</span>
-        <span>son güncelleme: ${fmtDate(a.lastUpdate)}</span>
-      </div>
-      <div class="note">${a.note}</div>
+      <div class="meta-row">Başvuru ${fmtDate(a.appliedDate)} · Son güncelleme ${fmtDate(a.lastUpdate)}</div>
+      ${a.note ? `<div class="note">${a.note}</div>` : ''}
       ${a.links && a.links.length ? `<div class="links-row">${a.links.map(l=>`<a class="link-pill" href="${l.url}" target="_blank" rel="noopener"><img src="${LOGO(l.domain)}" onerror="this.style.display='none'">${l.label}</a>`).join('')}</div>` : ''}
       <div class="actions">
         ${a.status==='open' ? `
-          <button class="success" data-act="pending" data-id="${a.id}">Başvurdum</button>
-          <button class="danger" data-act="rejected" data-id="${a.id}">İlgilenmiyorum</button>
+          <button class="primary-act" data-act="pending" data-id="${a.id}">Başvurdum</button>
+          <button class="text-act danger" data-act="rejected" data-id="${a.id}">İlgilenmiyorum</button>
         ` : `
-          ${a.status!=='approved' ? '<button class="success" data-act="approved" data-id="'+a.id+'">Onaylandı işaretle</button>' : ''}
-          ${a.status!=='rejected' ? '<button class="danger" data-act="rejected" data-id="'+a.id+'">Reddedildi işaretle</button>' : ''}
-          ${a.status!=='pending' ? '<button data-act="pending" data-id="'+a.id+'">Beklemede işaretle</button>' : ''}
+          ${a.status!=='approved' ? '<button class="primary-act" data-act="approved" data-id="'+a.id+'">Onaylandı işaretle</button>' : ''}
+          ${a.status!=='rejected' ? '<button class="text-act danger" data-act="rejected" data-id="'+a.id+'">Reddedildi işaretle</button>' : ''}
+          ${a.status!=='pending' ? '<button class="text-act" data-act="pending" data-id="'+a.id+'">Beklemede işaretle</button>' : ''}
         `}
       </div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 let showAddForm = false;
@@ -1709,18 +1704,35 @@ async function runScan() {
   const GEMINI_API_KEY = "AQ.Ab8RN6J3PBzmjx6V3UiHUJrjHvQWY5YevV3rvKkWVZSi2IJBeA";
 
   try {
-    // A) Tavily ile Kariyer.net, LinkedIn ve Savunma/Sosyal Medya Duyurularını Tara
+    // A) Tavily ile Kariyer.net ve LinkedIn Duyurularını Tara
     const searchRes = await fetch("https://api.tavily.com/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: TAVILY_API_KEY,
-        query: "site:kariyer.net OR site:linkedin.com/jobs OR site:savunmakariyer.com 'staj' OR 'yazılım mühendisi' OR 'aday mühendislik' 2026",
+        query: "site:kariyer.net OR site:linkedin.com/jobs 'staj' OR 'yazılım mühendisi' OR 'aday mühendislik' 2026",
         search_depth: "basic",
-        max_results: 15
+        max_results: 15,
+        include_raw_content: true
       })
     });
     const searchData = await searchRes.json();
+
+    // A2) savunmakariyer.com bot-korumalı bir SPA olduğu için ayrı ve daha derin (advanced) bir sorgu gerekiyor
+    const savunmaRes = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query: "site:savunmakariyer.com staj OR mühendis OR yazılım OR aday",
+        search_depth: "advanced",
+        max_results: 10,
+        include_raw_content: true
+      })
+    });
+    const savunmaData = await savunmaRes.json();
+
+    const combinedResults = [...(searchData.results || []), ...(savunmaData.results || [])];
 
     // B) Gemini 2.5 Flash ile İlanları Süz
     const promptText = `
@@ -1739,7 +1751,7 @@ async function runScan() {
         }
       ]
     }
-    Arama Verisi: ${JSON.stringify(searchData.results)}`;
+    Arama Verisi: ${JSON.stringify(combinedResults)}`;
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`;
     const aiRes = await fetch(geminiUrl, {
